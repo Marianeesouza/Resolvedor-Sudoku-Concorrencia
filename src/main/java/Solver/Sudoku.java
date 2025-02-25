@@ -11,7 +11,7 @@ public class Sudoku {
 
     // Interface para o callback de atualização da UI
     public interface CellUpdateCallback {
-        void update(int row, int col, int value);
+        void update(int row, int col, int value, Thread thread);
     }
 
     // Variável para armazenar o callback
@@ -67,12 +67,12 @@ public class Sudoku {
             if (isSafe(board, row, col, num)) {
                 board[row][col] = num;
                 if (updateCallback != null) {
-                    updateCallback.update(row, col, num);
+                    updateCallback.update(row, col, num, Thread.currentThread());
                 }
                 if (solve(board)) return true;
                 board[row][col] = 0;
                 if (updateCallback != null) {
-                    updateCallback.update(row, col, 0);
+                    updateCallback.update(row, col, 0, Thread.currentThread());
                 }
             }
         }
@@ -99,13 +99,12 @@ public class Sudoku {
 
     public void solveConcurrently() {
         int firstRow = -1, firstCol = -1;
-        outerLoop:
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 if (board[i][j] == 0) {
                     firstRow = i;
                     firstCol = j;
-                    break outerLoop;
+                    break;
                 }
             }
         }

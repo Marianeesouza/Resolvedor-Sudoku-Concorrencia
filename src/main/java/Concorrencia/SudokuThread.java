@@ -30,12 +30,12 @@ public class SudokuThread extends Thread {
             if (sudokuRef.isSafe(board, row, col, num)) {
                 board[row][col] = num;
                 if (sudokuRef.getUpdateCallback() != null) {
-                    sudokuRef.getUpdateCallback().update(row, col, num);
+                    sudokuRef.getUpdateCallback().update(row, col, num, Thread.currentThread());
                 }
                 if (sudokuRef.solve(board)) break;
                 board[row][col] = 0;
                 if (sudokuRef.getUpdateCallback() != null) {
-                    sudokuRef.getUpdateCallback().update(row, col, 0);
+                    sudokuRef.getUpdateCallback().update(row, col, 0, Thread.currentThread());
                 }
             }
         }
