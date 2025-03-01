@@ -134,7 +134,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                org.example.resolvedor_sudoku_concorrencia/org.example.resolvedor_sudoku_concorrencia.HelloApplication
+                                org.example.resolvedor_sudoku_concorrencia/org.example.resolvedor_sudoku_concorrencia.Main
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>

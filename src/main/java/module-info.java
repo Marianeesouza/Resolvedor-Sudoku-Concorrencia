@@ -13,4 +13,6 @@ module org.example.resolvedor_sudoku_concorrencia {
 
     opens org.example.resolvedor_sudoku_concorrencia to javafx.fxml;
     exports org.example.resolvedor_sudoku_concorrencia;
+    exports Controllers;
+    opens Controllers to javafx.fxml;
 }
