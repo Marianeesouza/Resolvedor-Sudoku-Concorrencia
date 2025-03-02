@@ -1,168 +1,123 @@
 package Solver;
 
-import Concorrencia.SudokuThread;
-
-import static com.almasb.fxgl.core.math.FXGLMath.floor;
+import java.util.Random;
 
 public class Sudoku {
     private int[][] board;
-    private int N; // number of columns/rows.
+    private final int N;
+    private final int sqrtN;
+    private static final Random rand = new Random(System.currentTimeMillis());
 
     public Sudoku(int[][] board) {
         this.board = board;
         this.N = board.length;
+        this.sqrtN = (int) Math.sqrt(N);
     }
 
     public boolean solve() {
-        int row = -1;
-        int col = -1;
-        boolean isEmpty = true;
-
-        // Verifica há células vazias no tabuleiro
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < N; j++) {
-                if (board[i][j] == 0) {
-                    row = i;
-                    col = j;
-
-                    isEmpty = false;
-                    break;
-                }
-            }
-            if (!isEmpty) {
-                break;
-            }
+        int[] emptyCell = findEmptyCell();
+        if (emptyCell == null) {
+            return true; // Solução encontrada
         }
 
-        if (isEmpty) {
-            return true;
-        }
+        int row = emptyCell[0], col = emptyCell[1];
 
-        // Tenta preencher a célula vazia com um número válido
         for (int num = 1; num <= N; num++) {
             if (isSafe(row, col, num)) {
                 board[row][col] = num;
                 if (solve()) {
                     return true;
-                } else {
-                    board[row][col] = 0;
+                }
+                board[row][col] = 0; // Backtrack
+            }
+        }
+        return false; // Nenhuma solução válida
+    }
+
+    private int[] findEmptyCell() {
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                if (board[i][j] == 0) {
+                    return new int[]{i, j};
                 }
             }
         }
+        return null;
+    }
 
-        return false;
+    public int[][] getBoard() {
+        return board;
     }
 
     private boolean isSafe(int row, int col, int num) {
-        for (int d = 0; d < N; d++) {
-            if (board[row][d] == num) {
+        for (int i = 0; i < N; i++) {
+            if (board[row][i] == num || board[i][col] == num) {
                 return false;
             }
         }
 
-        for (int[] ints : board) {
-            if (ints[col] == num) {
-                return false;
-            }
-        }
+        int boxRowStart = row - row % sqrtN;
+        int boxColStart = col - col % sqrtN;
 
-        int sqrt = (int) Math.sqrt(N);
-        int boxRowStart = row - row % sqrt;
-        int boxColStart = col - col % sqrt;
-
-        for (int r = boxRowStart; r < boxRowStart + sqrt; r++) {
-            for (int d = boxColStart; d < boxColStart + sqrt; d++) {
-                if (board[r][d] == num) {
+        for (int r = 0; r < sqrtN; r++) {
+            for (int c = 0; c < sqrtN; c++) {
+                if (board[boxRowStart + r][boxColStart + c] == num) {
                     return false;
                 }
             }
         }
-
         return true;
     }
 
-    public void print() {
-        for (int r = 0; r < N; r++) {
-            if (r > 0 && r % Math.sqrt(N) == 0) {
-                System.out.println("-".repeat(N * 2 - 1)); // Linha separadora
-            }
+    public void generateBoard() {
+        this.board = new int[N][N];
 
-            for (int d = 0; d < N; d++) {
-                if (d > 0 && d % Math.sqrt(N) == 0) {
-                    System.out.print("| "); // Separador de bloco
-                }
-                System.out.print(board[r][d] + " ");
-            }
-            System.out.println(); // Nova linha após cada linha do tabuleiro
+        // Preenche o tabuleiro com uma solução válida
+        fillBoard();
+
+        // Remove números aleatoriamente para criar um quebra-cabeça
+        removeNumbers();
+    }
+
+    private void fillBoard() {
+        if (!solve()) {
+            throw new IllegalStateException("Não foi possível gerar uma solução para o Sudoku.");
         }
     }
 
+    private void removeNumbers() {
+        int count = N * N / 2; // Número de células a serem removidas (ajuste conforme necessário)
+        while (count > 0) {
+            int row = rand.nextInt(N);  // Aleatório
+            int col = rand.nextInt(N);  // Aleatório
+            if (board[row][col] != 0) {
+                board[row][col] = 0;  // Remover número
+                count--;
+            }
+        }
+    }
+
+    public void print() {
+        for (int i = 0; i < N; i++) {
+            if (i % sqrtN == 0 && i != 0) {
+                System.out.println("-".repeat(N * 2));
+            }
+            for (int j = 0; j < N; j++) {
+                if (j % sqrtN == 0 && j != 0) {
+                    System.out.print("| ");
+                }
+                System.out.print((board[i][j] == 0 ? "." : board[i][j]) + " ");
+            }
+            System.out.println();
+        }
+    }
 
     public static void main(String[] args) {
-//        int[][] board = new int[][] {
-//            {3, 0, 6, 5, 0, 8, 4, 0, 0},
-//            {5, 2, 0, 0, 0, 0, 0, 0, 0},
-//            {0, 8, 7, 0, 0, 0, 0, 3, 1},
-//            {0, 0, 3, 0, 0, 0, 1, 8, 0},
-//            {9, 0, 0, 8, 6, 3, 0, 0, 5},
-//            {0, 5, 0, 0, 9, 0, 6, 0, 0},
-//            {1, 3, 0, 0, 0, 0, 2, 5, 0},
-//            {0, 0, 0, 0, 0, 0, 0, 7, 4},
-//            {0, 0, 5, 2, 0, 6, 3, 0, 0}
-//        };
-
-        int[][] board = {
-                { 1,  0,  0,  4,  0,  6,  7,  0,  9,  0, 11,  0, 13, 14,  0, 16 },
-                { 5,  0,  0,  0,  9,  0, 11, 12,  0, 14, 15,  0,  1,  0,  3,  0  },
-                { 0, 10, 11,  0, 13,  0,  0, 16,  1,  0,  3,  4,  5,  0,  7,  8  },
-                {13, 14,  0,  0,  1,  0,  3,  4,  5,  0,  7,  0,  9,  0, 11,  0 },
-
-                { 2,  1,  0,  0,  6,  5,  0,  0, 10,  9,  0, 11, 14,  0,  0, 15 },
-                { 0,  5,  0,  7, 10,  0, 12,  0, 14,  0,  0, 15,  2,  0,  4,  3  },
-                {10,  0, 12, 11, 14, 13,  0,  0,  2,  1,  4,  0,  0,  5,  8,  0  },
-                {14,  0, 16,  0,  0,  1,  4,  3,  0,  5,  0,  7, 10,  9,  0, 11 },
-
-                { 0,  4,  1,  2,  7,  8,  0,  6,  0,  0,  9, 10,  0, 16,  0, 14 },
-                { 7,  0,  5,  6, 11,  0,  9, 10, 15,  0,  0, 14,  3,  0,  1,  0  },
-                {11, 12,  9,  0, 15,  0,  0, 14,  3,  4,  1,  0,  7,  0,  0,  6  },
-                {15,  0,  0, 14,  3,  4,  1,  0,  7,  8,  0,  6, 11, 12,  9,  0 },
-
-                { 4,  0,  0,  1,  8,  0,  6,  5, 12,  0, 10,  0, 16,  0, 14,  0 },
-                { 0,  7,  0,  5, 12,  0,  0,  9,  0, 15,  0, 13,  4,  3,  0,  1  },
-                {12,  0, 10,  0, 16, 15, 14,  0,  0,  3,  2,  1,  8,  7,  0,  5  },
-                {16,  0,  0, 13,  4,  3,  0,  1,  8,  7,  6,  0, 12, 11,  0,  0  }
-        };
-
-//        int[][] board = {
-//                { 0,  0,  0,  0,  0,  6,  0,  0,  0, 10,  0,  0,  0,  0,  0, 16 },
-//                { 0,  0,  0,  0,  9,  0,  0, 12,  0,  0,  0,  0,  0, 15,  0,  0 },
-//                { 0,  0,  0,  0,  0,  0,  0, 16,  0,  0,  3,  0,  5,  0,  0,  0 },
-//                {13,  0,  0,  0,  0,  0,  0,  4,  0,  0,  0,  0,  9,  0,  0,  0 },
-//
-//                { 0,  1,  0,  0,  0,  5,  0,  0, 10,  0,  0,  0,  0,  0,  0, 15 },
-//                { 0,  0,  0,  7,  0,  0, 12,  0,  0,  0,  0,  0,  2,  0,  0,  0 },
-//                { 0,  0, 12,  0, 14,  0,  0,  0,  0,  0,  4,  0,  0,  5,  0,  0 },
-//                {14,  0,  0,  0,  0,  0,  4,  3,  0,  0,  0,  7,  0,  9,  0,  0 },
-//
-//                { 0,  0,  1,  2,  0,  0,  0,  6,  0,  0,  0,  0,  0, 16,  0,  0 },
-//                { 7,  0,  0,  6,  0,  0,  0, 10, 15,  0,  0,  0,  0,  0,  1,  0 },
-//                {11,  0,  0,  0, 15,  0,  0, 14,  0,  4,  0,  0,  7,  0,  0,  6 },
-//                { 0,  0,  0, 14,  0,  4,  1,  0,  7,  0,  0,  6, 11,  0,  0,  0 },
-//
-//                { 4,  0,  0,  0,  8,  0,  0,  5,  0,  0, 10,  0,  0,  0, 14,  0 },
-//                { 0,  0,  0,  5,  0,  0,  0,  9,  0,  0,  0, 13,  4,  3,  0,  0 },
-//                {12,  0,  0,  0,  0,  0, 14,  0,  0,  0,  0,  1,  8,  0,  0,  5 },
-//                { 0,  0,  0, 13,  4,  3,  0,  0,  8,  7,  0,  0, 12,  0,  0,  0 }
-//        };
-
-
-
-
-        Sudoku sudoku = new Sudoku(board);
-        if (sudoku.solve()) {
-            sudoku.print();
-        } else {
-            System.out.println("No solution");
-        }
+        Sudoku sudoku = new Sudoku(new int[9][9]);
+        sudoku.generateBoard();
+        sudoku.print();
+        System.out.println("\nResolvendo...");
+        sudoku.solve();
+        sudoku.print();
     }
 }

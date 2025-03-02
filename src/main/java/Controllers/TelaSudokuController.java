@@ -6,6 +6,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
@@ -32,7 +33,7 @@ public class TelaSudokuController implements Initializable {
         board = new int[tamanhoMatriz][tamanhoMatriz];
 
         criarGridSudoku();
-        carregarBoardFixo();
+        carregarBoardAleatorio();  // Chama o método para gerar o tabuleiro aleatório
         atualizarInterface();
     }
 
@@ -58,55 +59,45 @@ public class TelaSudokuController implements Initializable {
         panePrincipal.getChildren().add(grid);
     }
 
-    private void carregarBoardFixo() {
-        if (this.tamanhoMatriz == 16) {
-            this.board = new int[][]{
-                    {1, 0, 0, 4, 0, 6, 7, 0, 9, 0, 11, 0, 13, 14, 0, 16},
-                    {5, 0, 0, 0, 9, 0, 11, 12, 0, 14, 15, 0, 1, 0, 3, 0},
-                    {0, 10, 11, 0, 13, 0, 0, 16, 1, 0, 3, 4, 5, 0, 7, 8},
-                    {13, 14, 0, 0, 1, 0, 3, 4, 5, 0, 7, 0, 9, 0, 11, 0},
+    private void carregarBoardAleatorio() {
+        board = new int[tamanhoMatriz][tamanhoMatriz];
 
-                    {2, 1, 0, 0, 6, 5, 0, 0, 10, 9, 0, 11, 14, 0, 0, 15},
-                    {0, 5, 0, 7, 10, 0, 12, 0, 14, 0, 0, 15, 2, 0, 4, 3},
-                    {10, 0, 12, 11, 14, 13, 0, 0, 2, 1, 4, 0, 0, 5, 8, 0},
-                    {14, 0, 16, 0, 0, 1, 4, 3, 0, 5, 0, 7, 10, 9, 0, 11},
-
-                    {0, 4, 1, 2, 7, 8, 0, 6, 0, 0, 9, 10, 0, 16, 0, 14},
-                    {7, 0, 5, 6, 11, 0, 9, 10, 15, 0, 0, 14, 3, 0, 1, 0},
-                    {11, 12, 9, 0, 15, 0, 0, 14, 3, 4, 1, 0, 7, 0, 0, 6},
-                    {15, 0, 0, 14, 3, 4, 1, 0, 7, 8, 0, 6, 11, 12, 9, 0},
-
-                    {4, 0, 0, 1, 8, 0, 6, 5, 12, 0, 10, 0, 16, 0, 14, 0},
-                    {0, 7, 0, 5, 12, 0, 0, 9, 0, 15, 0, 13, 4, 3, 0, 1},
-                    {12, 0, 10, 0, 16, 15, 14, 0, 0, 3, 2, 1, 8, 7, 0, 5},
-                    {16, 0, 0, 13, 4, 3, 0, 1, 8, 7, 6, 0, 12, 11, 0, 0}
-            };
-        } else if (this.tamanhoMatriz == 9) {
-            this.board = new int[][]{
-                    {5, 3, 0, 0, 7, 0, 0, 0, 0},
-                    {6, 0, 0, 1, 9, 5, 0, 0, 0},
-                    {0, 9, 8, 0, 0, 0, 0, 6, 0},
-                    {8, 0, 0, 0, 6, 0, 0, 0, 3},
-                    {4, 0, 0, 8, 0, 3, 0, 0, 1},
-                    {7, 0, 0, 0, 2, 0, 0, 0, 6},
-                    {0, 6, 0, 0, 0, 0, 2, 8, 0},
-                    {0, 0, 0, 4, 1, 9, 0, 0, 5},
-                    {0, 0, 0, 0, 8, 0, 0, 7, 9}
-            };
+        // Gerar um tabuleiro parcialmente preenchido aleatoriamente
+        for (int i = 0; i < tamanhoMatriz; i++) {
+            for (int j = 0; j < tamanhoMatriz; j++) {
+                if (Math.random() > 0.5) {
+                    board[i][j] = (int) (Math.random() * 9) + 1; // Preenche com números de 1 a 9
+                } else {
+                    board[i][j] = 0; // Deixa a célula vazia
+                }
+            }
         }
-    }
 
+        // Se você quiser garantir que o Sudoku gerado seja válido ou ajustado, implemente uma lógica adicional aqui
+    }
 
     @FXML
     private void resolverSudoku(ActionEvent event) {
         new Thread(() -> {
             Sudoku sudoku = new Sudoku(board);
             if (sudoku.solve()) {
+                board = sudoku.getBoard();  // Se a solução modificar outra matriz, atualiza aqui.
                 Platform.runLater(this::atualizarInterface);
             } else {
-                System.out.println("Nenhuma solução encontrada!");
+                Platform.runLater(() -> {
+                    System.out.println("Nenhuma solução encontrada!");
+                    exibirAlertaErro("Nenhuma solução foi encontrada para este Sudoku!");
+                });
             }
         }).start();
+    }
+
+    private void exibirAlertaErro(String mensagem) {
+        Alert alerta = new Alert(Alert.AlertType.ERROR);
+        alerta.setTitle("Erro");
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensagem);
+        alerta.showAndWait();
     }
 
     private void atualizarInterface() {
