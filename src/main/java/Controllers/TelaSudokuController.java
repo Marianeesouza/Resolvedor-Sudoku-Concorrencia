@@ -101,10 +101,21 @@ public class TelaSudokuController implements Initializable {
     private void resolverSudoku(ActionEvent event) {
         new Thread(() -> {
             Sudoku sudoku = new Sudoku(board);
+<<<<<<< Updated upstream
             if (sudoku.solve(3)) {
                 Platform.runLater(this::atualizarInterface);
             } else {
                 System.out.println("Nenhuma solução encontrada!");
+=======
+            try {
+                if (sudoku.solve()) {
+                    Platform.runLater(this::atualizarInterface);
+                } else {
+                    System.out.println("Nenhuma solução encontrada!");
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+>>>>>>> Stashed changes
             }
         }).start();
     }
