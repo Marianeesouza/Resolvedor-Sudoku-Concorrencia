@@ -9,6 +9,7 @@
       <change beforePath="$PROJECT_DIR$/src/main/java/Concorrencia/SudokuThread.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Concorrencia/SudokuThread.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Solver/Sudoku.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Solver/Sudoku.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,6 +20,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="Interface" />
       </list>
     </option>
   </component>
@@ -27,13 +29,6 @@
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
-  </component>
-  <component name="MavenImportPreferences">
-    <option name="generalSettings">
-      <MavenGeneralSettings>
-        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
-      </MavenGeneralSettings>
-    </option>
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4

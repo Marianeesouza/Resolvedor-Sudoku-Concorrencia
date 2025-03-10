@@ -1,58 +1,123 @@
 package org.example.resolvedor_sudoku_concorrencia;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-
-import java.io.IOException;
-
 import javafx.application.Platform;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
-import Solver.Sudoku;
-import Solver.Sudoku.CellUpdateCallback;
-
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import Solver.Sudoku;
+import Solver.CellUpdateCallback;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HelloApplication extends Application {
 
-    private static final int SIZE = 9;
+    private static int SIZE = 9;
     private Label[][] mainBoard = new Label[SIZE][SIZE];
+    private int[][] board = new int[SIZE][SIZE];
     private Map<Thread, Label[][]> threadBoards = new HashMap<>();
     private Sudoku sudoku;
     private GridPane mainGrid;
     private HBox root;
+    private ComboBox<Integer> threadSelector; // Seletor fixo de threads
+    private Label timeLabel;
+    private static Label failureLabel =  new Label("Falhas: ");
+    private Button startButton;
 
     @Override
     public void start(Stage primaryStage) {
-        int[][] board = new int[SIZE][SIZE]; // Tabuleiro inicial vazio
-        sudoku = new Sudoku(board);
+        board = new int[][] {
+                {3, 0, 6, 5, 0, 8, 4, 0, 0},
+                {5, 2, 0, 0, 0, 0, 0, 0, 0},
+                {0, 8, 7, 0, 0, 0, 0, 3, 1},
+                {0, 0, 3, 0, 0, 0, 1, 8, 0},
+                {9, 0, 0, 8, 6, 3, 0, 0, 5},
+                {0, 5, 0, 0, 9, 0, 6, 0, 0},
+                {1, 3, 0, 0, 0, 0, 2, 5, 0},
+                {0, 0, 0, 0, 0, 0, 0, 7, 4},
+                {0, 0, 5, 2, 0, 6, 3, 0, 0}
+        };
 
-        mainGrid = createGrid(mainBoard);
+        // Criar o seletor de número de threads (apenas 1, 3 ou 9)
+        threadSelector = new ComboBox<>();
+        threadSelector.getItems().addAll(1, 3, 9);
+        threadSelector.setValue(3); // Valor padrão
+
+        // Criar o botão para iniciar a resolução
+        startButton = new Button("Iniciar Sudoku");
+        startButton.setOnAction(e -> iniciarSudoku());
+
+        timeLabel = new Label("Tempo: --"); // Inicialmente vazio
+
+        // Layout da interface
+        mainGrid = createGrid(mainBoard, 0);
         root = new HBox(10);
         root.getChildren().add(mainGrid);
+        root.getChildren().add(timeLabel);
+        root.getChildren().add(failureLabel);
 
-        Scene scene = new Scene(root, 800, 400);
+        VBox layout = new VBox(10, new Label("Número de Threads:"), threadSelector, startButton, root);
+        layout.setAlignment(Pos.CENTER);
+
+        Scene scene = new Scene(layout, 800, 500);
         primaryStage.setTitle("Evolução do Sudoku com Threads");
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        // Configurar callback para atualizar a UI
-        sudoku.setUpdateCallback((row, col, value, thread) -> updateCell(row, col, value, thread));
-
-        new Thread(() -> sudoku.solveConcurrently()).start();
     }
 
-    private GridPane createGrid(Label[][] labels) {
+    private void iniciarSudoku() {
+        startButton.setDisable(true); // Desabilita o botão enquanto o Sudoku está sendo resolvido
+        int numThreads = threadSelector.getValue(); // Pega o valor escolhido (1, 3 ou 9)
+        sudoku = new Sudoku(board, numThreads); // Criando Sudoku com a escolha do usuário
+
+        System.out.println(sudoku.getUpdateCallback());
+        // Configurar callback para atualizar a UI
+        sudoku.setUpdateCallback((board, thread) -> updateBoard(board, Thread.currentThread()));
+
+        new Thread(() -> {
+            sudoku.solveConcurrently(); // Resolver o Sudoku
+
+            // Atualiza o tempo de execução na UI
+            Platform.runLater(() -> {
+                Duration duration = Sudoku.getDuration(); // Pegando o tempo de execução
+                timeLabel.setText("Tempo: " + duration.toMillis() + " ms");
+                List<String> failureMessages = sudoku.getFailureLabel();
+                for (String failureMsg : failureMessages) {
+                    String msg = failureLabel.getText();
+                    failureLabel.setText(msg+"\n"+failureMsg);
+                }
+                startButton.setDisable(false); // Habilita o botão novamente
+                startButton.setText("Reiniciar Sudoku");
+                startButton.setOnAction(e -> { reiniciarSudoku();});
+            });
+        }).start();
+    }
+
+    private void reiniciarSudoku() {
+        //TODO: Reiniciar o Sudoku
+    }
+
+    private GridPane createGrid(Label[][] labels, int size) {
         GridPane grid = new GridPane();
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
                 Label cell = new Label("");
-                cell.setStyle("-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center;");
+                if (size == 0) {
+                    cell.setStyle("-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: white;");
+                    cell.setText(this.board[i][j] == 0 ? "" : String.valueOf(this.board[i][j]));
+                } else {
+                    cell.setStyle("-fx-border-color: black; -fx-min-width: 20px; -fx-min-height: 20px; -fx-alignment: center;");
+                }
                 labels[i][j] = cell;
                 grid.add(cell, j, i);
             }
@@ -60,28 +125,72 @@ public class HelloApplication extends Application {
         return grid;
     }
 
-    public void updateCell(int row, int col, int value, Thread thread) {
+    public void updateBoard(int[][] board, Thread thread) {
         Platform.runLater(() -> {
-            // Atualiza o tabuleiro principal
-            mainBoard[row][col].setText(value == 0 ? "" : String.valueOf(value));
-            mainBoard[row][col].setStyle(
-                    "-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: lightyellow;"
-            );
+            // Atualize o tabuleiro principal
+            for (int i = 0; i < SIZE; i++) {
+                for (int j = 0; j < SIZE; j++) {
+                    int value = board[i][j];
+                    mainBoard[i][j].setText(value == 0 ? "" : String.valueOf(value));
+                    mainBoard[i][j].setStyle(value == 0 ? "-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: white;" : "-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: lightyellow;");
+                }
+            }
 
-            // Atualiza o tabuleiro da thread correspondente
             if (!threadBoards.containsKey(thread)) {
                 Label[][] threadBoard = new Label[SIZE][SIZE];
-                GridPane threadGrid = createGrid(threadBoard);
+                GridPane threadGrid = createGrid(threadBoard, 1);
                 threadBoards.put(thread, threadBoard);
+                Platform.runLater(() -> root.getChildren().add(threadGrid));
+            }
 
+            // Verifique se a thread tem um tabuleiro associado e atualize-o
+            if (threadBoards.containsKey(thread)) {
+                Label[][] threadBoard = threadBoards.get(thread);
+                for (int i = 0; i < SIZE; i++) {
+                    for (int j = 0; j < SIZE; j++) {
+                        int value = board[i][j];
+                        threadBoard[i][j].setText(value == 0 ? "" : String.valueOf(value));
+                        threadBoard[i][j].setStyle(value == 0 ?
+                                "-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: white;"
+                                : "-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: lightblue;");
+                    }
+                }
+            }
+        });
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateBoard(int[][] board){
+        Platform.runLater(() -> {
+            for (int i = 0; i < SIZE; i++) {
+                for (int j = 0; j < SIZE; j++) {
+                    int value = board[i][j];
+                    mainBoard[i][j].setText(value == 0 ? "" : String.valueOf(value));
+                    mainBoard[i][j].setStyle(value == 0 ? "-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: white;" : "-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: lightyellow;");
+                }
+            }
+        });
+    }
+
+    public synchronized void updateCell(int row, int col, int value, Thread thread) {
+        Platform.runLater(() -> {
+            mainBoard[row][col].setText(value == 0 ? "" : String.valueOf(value));
+            mainBoard[row][col].setStyle("-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: lightyellow;");
+
+            if (!threadBoards.containsKey(thread)) {
+                Label[][] threadBoard = new Label[SIZE][SIZE];
+                GridPane threadGrid = createGrid(threadBoard, 1);
+                threadBoards.put(thread, threadBoard);
                 root.getChildren().add(threadGrid);
             }
 
             Label[][] threadBoard = threadBoards.get(thread);
             threadBoard[row][col].setText(value == 0 ? "" : String.valueOf(value));
-            threadBoard[row][col].setStyle(
-                    "-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: lightblue;"
-            );
+            threadBoard[row][col].setStyle("-fx-border-color: black; -fx-min-width: 40px; -fx-min-height: 40px; -fx-alignment: center; -fx-background-color: lightblue;");
         });
 
         try {
@@ -95,5 +204,3 @@ public class HelloApplication extends Application {
         launch(args);
     }
 }
-
-

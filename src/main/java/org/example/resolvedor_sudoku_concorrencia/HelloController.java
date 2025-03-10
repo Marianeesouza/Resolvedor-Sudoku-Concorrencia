@@ -2,7 +2,7 @@ package org.example.resolvedor_sudoku_concorrencia;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
-import Solver.Sudoku.CellUpdateCallback;
+import Solver.CellUpdateCallback;
 
 public class HelloController {
     @FXML
