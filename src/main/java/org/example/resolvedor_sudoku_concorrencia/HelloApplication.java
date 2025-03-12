@@ -6,12 +6,13 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
+import javafx.scene.control.Label; 
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import Solver.Sudoku;
+import Solver.SudokuGenerator;
 import Solver.CellUpdateCallback;
 
 import java.time.Duration;
@@ -36,17 +37,8 @@ public class HelloApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        board = new int[][] {
-                {3, 0, 6, 5, 0, 8, 4, 0, 0},
-                {5, 2, 0, 0, 0, 0, 0, 0, 0},
-                {0, 8, 7, 0, 0, 0, 0, 3, 1},
-                {0, 0, 3, 0, 0, 0, 1, 8, 0},
-                {9, 0, 0, 8, 6, 3, 0, 0, 5},
-                {0, 5, 0, 0, 9, 0, 6, 0, 0},
-                {1, 3, 0, 0, 0, 0, 2, 5, 0},
-                {0, 0, 0, 0, 0, 0, 0, 7, 4},
-                {0, 0, 5, 2, 0, 6, 3, 0, 0}
-        };
+        SudokuGenerator generator = new SudokuGenerator();
+        board = generator.generateBoard(20); // Gera um novo Sudoku com 40 células vazias
 
         // Criar o seletor de número de threads (apenas 1, 3 ou 9)
         threadSelector = new ComboBox<>();
@@ -104,8 +96,20 @@ public class HelloApplication extends Application {
     }
 
     private void reiniciarSudoku() {
-        //TODO: Reiniciar o Sudoku
+        Sudoku.resetGame(); // Reseta todas as variáveis estáticas
+    
+        SudokuGenerator generator = new SudokuGenerator();
+        int[][] newBoard = generator.generateBoard(20);
+    
+        this.board = newBoard;
+    
+        Stage stage = (Stage) startButton.getScene().getWindow();
+        stage.close();
+    
+        Platform.runLater(() -> new HelloApplication().start(new Stage()));
     }
+    
+    
 
     private GridPane createGrid(Label[][] labels, int size) {
         GridPane grid = new GridPane();

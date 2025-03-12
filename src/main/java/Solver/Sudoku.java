@@ -30,6 +30,14 @@ public class Sudoku {
         this.updateCallback = callback;
     }
 
+    public static void resetGame() {
+        solutionFound.set(false);
+        solutionBoard.set(null);
+        start = null;
+        duration = null;
+    }
+    
+
     public CellUpdateCallback getUpdateCallback() {
         return updateCallback;
     }
