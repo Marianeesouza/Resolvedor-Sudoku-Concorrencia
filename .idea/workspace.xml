@@ -5,13 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e635e1c5-2b2c-4522-9e6e-ee9920870f63" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/Controllers/TelaInicialController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/Controllers/TelaSudokuController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/Utils/TamanhoMatriz.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Concorrencia/SudokuThread.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Concorrencia/SudokuThread.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Solver/Sudoku.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Solver/Sudoku.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/HelloController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,22 +20,15 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Class" />
+        <option value="Interface" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="KubernetesApiPersistence">{}</component>
-  <component name="KubernetesApiProvider">{
-  &quot;isMigrated&quot;: true
-}</component>
-  <component name="MavenImportPreferences">
-    <option name="generalSettings">
-      <MavenGeneralSettings>
-        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
-      </MavenGeneralSettings>
-    </option>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -51,62 +42,26 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.HelloApplication.executor": "Run",
-    "Application.Main.executor": "Run",
     "Application.Sudoku.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "PauloBranch",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/thiag/Documents/Concorrencia/Resolvedor-Sudoku-Concorrencia",
+    "last_opened_file_path": "C:/Users/paulo/OneDrive/Documentos/GitHub/Resolvedor-Sudoku-Concorrencia",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Application.Main">
-    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="org.example.resolvedor_sudoku_concorrencia.Main" />
-      <module name="Resolvedor_Sudoku_Concorrencia" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="Controllers.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Sudoku" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="Solver.Sudoku" />
-      <module name="Resolvedor_Sudoku_Concorrencia" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="Solver.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Application.Main" />
-        <item itemvalue="Application.Sudoku" />
-      </list>
-    </recent_temporary>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-9823dce3aa75-fdfe4dae3a2d-intellij.indexing.shared.core-IU-243.21565.193" />
-        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-IU-243.21565.193" />
+        <option value="jdk-22-openjdk-22-4caba194b151-f504ca98" />
       </set>
     </attachedChunks>
   </component>
@@ -120,8 +75,8 @@
       <updated>1739922183666</updated>
       <workItem from="1739922184739" duration="4573000" />
       <workItem from="1740407917468" duration="195000" />
-      <workItem from="1740762239677" duration="5283000" />
-      <workItem from="1740786886948" duration="2527000" />
+      <workItem from="1740432707795" duration="91000" />
+      <workItem from="1740487413115" duration="5593000" />
     </task>
     <servers />
   </component>

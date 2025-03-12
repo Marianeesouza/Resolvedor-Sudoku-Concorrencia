@@ -1,94 +1,172 @@
 package Solver;
 
-import Concorrencia.SudokuThread;
-
-import static com.almasb.fxgl.core.math.FXGLMath.floor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.time.Instant;
+import java.time.Duration;
 
 public class Sudoku {
     private int[][] board;
-    private int N; // number of columns/rows.
+    private int N;
+    public static AtomicBoolean solutionFound = new AtomicBoolean(false);
+    public static AtomicReference<int[][]> solutionBoard = new AtomicReference<>(null);
+    public static int numThreads = 3;
+    public static Instant start;
+    public static Duration duration;
+    public List<String> failureMessages = new ArrayList<>();
 
-    public Sudoku(int[][] board) {
+    // Variável para armazenar o callback
+    private CellUpdateCallback updateCallback;
+
+    public Sudoku(int[][] board, int numThreads) {
         this.board = board;
         this.N = board.length;
+        this.numThreads = numThreads;
     }
 
-    public boolean solve() {
-        int row = -1;
-        int col = -1;
+    public void setUpdateCallback(CellUpdateCallback callback) {
+        this.updateCallback = callback;
+    }
+
+    public static void resetGame() {
+        solutionFound.set(false);
+        solutionBoard.set(null);
+        start = null;
+        duration = null;
+    }
+    
+
+    public CellUpdateCallback getUpdateCallback() {
+        return updateCallback;
+    }
+
+    public int[][] copyBoard() {
+        int[][] copy = new int[N][N];
+        for (int i = 0; i < N; i++) {
+            System.arraycopy(board[i], 0, copy[i], 0, N);
+        }
+        return copy;
+    }
+
+    public boolean solve(int[][] board) {
+        if (solutionFound.get()) return true;
+
+        int row = -1, col = -1;
         boolean isEmpty = true;
 
-        // Verifica há células vazias no tabuleiro
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
                 if (board[i][j] == 0) {
                     row = i;
                     col = j;
-
                     isEmpty = false;
                     break;
                 }
             }
-            if (!isEmpty) {
-                break;
-            }
+            if (!isEmpty) break;
         }
 
         if (isEmpty) {
+            solutionFound.set(true);
+            solutionBoard.set(board);
+            Instant end = Instant.now();
+            duration = Duration.between(start, end);
+            System.out.println("Tempo de execução: " + duration.toSeconds() + "s");
             return true;
         }
 
-        // Tenta preencher a célula vazia com um número válido
         for (int num = 1; num <= N; num++) {
-            if (isSafe(row, col, num)) {
+            if (solutionFound.get()) return true;
+            if (isSafe(board, row, col, num)) {
                 board[row][col] = num;
-                if (solve()) {
-                    return true;
-                } else {
-                    board[row][col] = 0;
+                if (updateCallback != null) {
+                    updateCallback.update(board, Thread.currentThread());
+                }
+                if (solve(board)) return true;
+                board[row][col] = 0;
+                if (updateCallback != null) {
+                    updateCallback.update(board, Thread.currentThread());
                 }
             }
         }
-
         return false;
     }
 
-    private boolean isSafe(int row, int col, int num) {
+    public boolean isSafe(int[][] board, int row, int col, int num) {
         for (int d = 0; d < N; d++) {
-            if (board[row][d] == num) {
-                return false;
-            }
+            if (board[row][d] == num) return false;
         }
-
-        for (int[] ints : board) {
-            if (ints[col] == num) {
-                return false;
-            }
+        for (int r = 0; r < N; r++) {
+            if (board[r][col] == num) return false;
         }
-
         int sqrt = (int) Math.sqrt(N);
         int boxRowStart = row - row % sqrt;
         int boxColStart = col - col % sqrt;
-
         for (int r = boxRowStart; r < boxRowStart + sqrt; r++) {
             for (int d = boxColStart; d < boxColStart + sqrt; d++) {
-                if (board[r][d] == num) {
-                    return false;
+                if (board[r][d] == num) return false;
+            }
+        }
+        return true;
+    }
+
+    public void solveConcurrently() {
+        start = Instant.now();
+        int firstRow = -1, firstCol = -1;
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+                if (board[i][j] == 0) {
+                    firstRow = i;
+                    firstCol = j;
+                    break;
                 }
             }
         }
 
-        return true;
+        if (firstRow == -1) {
+            solutionFound.set(true);
+            solutionBoard.set(board);
+            return;
+        }
+
+        System.out.println("Empty cell found at " + firstRow + ", " + firstCol);
+
+        int interval = (int) Math.ceil((double) N / numThreads);
+
+        Thread[] threads = new Thread[numThreads];
+
+        for (int i = 0; i < numThreads; i++) {
+            int start = i * interval + 1;
+            int end = Math.min((i + 1) * interval, N);
+            int[][] boardCopy = copyBoard();
+            threads[i] = new Concorrencia.SudokuThread(boardCopy, firstRow, firstCol, start, end, this);
+            threads[i].start();
+        }
+
+        for (Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (solutionFound.get()) {
+            board = solutionBoard.get();
+            print();
+        }
     }
 
     public void print() {
-        for (int r = 0; r < N; r++) {
-            if (r > 0 && r % Math.sqrt(N) == 0) {
-                System.out.println("-".repeat(N * 2 - 1)); // Linha separadora
+        for (int r = 0; r < board.length; r++) {
+            if (r > 0 && r % Math.sqrt(board.length) == 0) {
+                System.out.println("-".repeat(board.length * 2 - 1)); // Linha separadora
             }
 
-            for (int d = 0; d < N; d++) {
-                if (d > 0 && d % Math.sqrt(N) == 0) {
+            for (int d = 0; d < board.length; d++) {
+                if (d > 0 && d % Math.sqrt(board.length) == 0) {
                     System.out.print("| "); // Separador de bloco
                 }
                 System.out.print(board[r][d] + " ");
@@ -97,72 +175,67 @@ public class Sudoku {
         }
     }
 
+    public int[][] getBoard() {
+        return board;
+    }
 
-    public static void main(String[] args) {
-//        int[][] board = new int[][] {
-//            {3, 0, 6, 5, 0, 8, 4, 0, 0},
-//            {5, 2, 0, 0, 0, 0, 0, 0, 0},
-//            {0, 8, 7, 0, 0, 0, 0, 3, 1},
-//            {0, 0, 3, 0, 0, 0, 1, 8, 0},
-//            {9, 0, 0, 8, 6, 3, 0, 0, 5},
-//            {0, 5, 0, 0, 9, 0, 6, 0, 0},
-//            {1, 3, 0, 0, 0, 0, 2, 5, 0},
-//            {0, 0, 0, 0, 0, 0, 0, 7, 4},
-//            {0, 0, 5, 2, 0, 6, 3, 0, 0}
-//        };
+    public void setBoard(int[][] board) {
+        this.board = board;
+    }
 
-        int[][] board = {
-                { 1,  0,  0,  4,  0,  6,  7,  0,  9,  0, 11,  0, 13, 14,  0, 16 },
-                { 5,  0,  0,  0,  9,  0, 11, 12,  0, 14, 15,  0,  1,  0,  3,  0  },
-                { 0, 10, 11,  0, 13,  0,  0, 16,  1,  0,  3,  4,  5,  0,  7,  8  },
-                {13, 14,  0,  0,  1,  0,  3,  4,  5,  0,  7,  0,  9,  0, 11,  0 },
+    public int getN() {
+        return N;
+    }
 
-                { 2,  1,  0,  0,  6,  5,  0,  0, 10,  9,  0, 11, 14,  0,  0, 15 },
-                { 0,  5,  0,  7, 10,  0, 12,  0, 14,  0,  0, 15,  2,  0,  4,  3  },
-                {10,  0, 12, 11, 14, 13,  0,  0,  2,  1,  4,  0,  0,  5,  8,  0  },
-                {14,  0, 16,  0,  0,  1,  4,  3,  0,  5,  0,  7, 10,  9,  0, 11 },
+    public void setN(int n) {
+        N = n;
+    }
 
-                { 0,  4,  1,  2,  7,  8,  0,  6,  0,  0,  9, 10,  0, 16,  0, 14 },
-                { 7,  0,  5,  6, 11,  0,  9, 10, 15,  0,  0, 14,  3,  0,  1,  0  },
-                {11, 12,  9,  0, 15,  0,  0, 14,  3,  4,  1,  0,  7,  0,  0,  6  },
-                {15,  0,  0, 14,  3,  4,  1,  0,  7,  8,  0,  6, 11, 12,  9,  0 },
+    public static AtomicBoolean getSolutionFound() {
+        return solutionFound;
+    }
 
-                { 4,  0,  0,  1,  8,  0,  6,  5, 12,  0, 10,  0, 16,  0, 14,  0 },
-                { 0,  7,  0,  5, 12,  0,  0,  9,  0, 15,  0, 13,  4,  3,  0,  1  },
-                {12,  0, 10,  0, 16, 15, 14,  0,  0,  3,  2,  1,  8,  7,  0,  5  },
-                {16,  0,  0, 13,  4,  3,  0,  1,  8,  7,  6,  0, 12, 11,  0,  0  }
-        };
+    public static void setSolutionFound(AtomicBoolean solutionFound) {
+        Sudoku.solutionFound = solutionFound;
+    }
 
-//        int[][] board = {
-//                { 0,  0,  0,  0,  0,  6,  0,  0,  0, 10,  0,  0,  0,  0,  0, 16 },
-//                { 0,  0,  0,  0,  9,  0,  0, 12,  0,  0,  0,  0,  0, 15,  0,  0 },
-//                { 0,  0,  0,  0,  0,  0,  0, 16,  0,  0,  3,  0,  5,  0,  0,  0 },
-//                {13,  0,  0,  0,  0,  0,  0,  4,  0,  0,  0,  0,  9,  0,  0,  0 },
-//
-//                { 0,  1,  0,  0,  0,  5,  0,  0, 10,  0,  0,  0,  0,  0,  0, 15 },
-//                { 0,  0,  0,  7,  0,  0, 12,  0,  0,  0,  0,  0,  2,  0,  0,  0 },
-//                { 0,  0, 12,  0, 14,  0,  0,  0,  0,  0,  4,  0,  0,  5,  0,  0 },
-//                {14,  0,  0,  0,  0,  0,  4,  3,  0,  0,  0,  7,  0,  9,  0,  0 },
-//
-//                { 0,  0,  1,  2,  0,  0,  0,  6,  0,  0,  0,  0,  0, 16,  0,  0 },
-//                { 7,  0,  0,  6,  0,  0,  0, 10, 15,  0,  0,  0,  0,  0,  1,  0 },
-//                {11,  0,  0,  0, 15,  0,  0, 14,  0,  4,  0,  0,  7,  0,  0,  6 },
-//                { 0,  0,  0, 14,  0,  4,  1,  0,  7,  0,  0,  6, 11,  0,  0,  0 },
-//
-//                { 4,  0,  0,  0,  8,  0,  0,  5,  0,  0, 10,  0,  0,  0, 14,  0 },
-//                { 0,  0,  0,  5,  0,  0,  0,  9,  0,  0,  0, 13,  4,  3,  0,  0 },
-//                {12,  0,  0,  0,  0,  0, 14,  0,  0,  0,  0,  1,  8,  0,  0,  5 },
-//                { 0,  0,  0, 13,  4,  3,  0,  0,  8,  7,  0,  0, 12,  0,  0,  0 }
-//        };
+    public static AtomicReference<int[][]> getSolutionBoard() {
+        return solutionBoard;
+    }
 
+    public static void setSolutionBoard(AtomicReference<int[][]> solutionBoard) {
+        Sudoku.solutionBoard = solutionBoard;
+    }
 
+    public static int getNumThreads() {
+        return numThreads;
+    }
 
+    public static void setNumThreads(int numThreads) {
+        Sudoku.numThreads = numThreads;
+    }
 
-        Sudoku sudoku = new Sudoku(board);
-        if (sudoku.solve()) {
-            sudoku.print();
-        } else {
-            System.out.println("No solution");
-        }
+    public static Instant getStart() {
+        return start;
+    }
+
+    public static void setStart(Instant start) {
+        Sudoku.start = start;
+    }
+
+    public static Duration getDuration() {
+        return duration;
+    }
+
+    public static void setDuration(Duration duration) {
+        Sudoku.duration = duration;
+    }
+
+    public List<String> getFailureLabel() {
+        return failureMessages;
+    }
+
+    public void setFailureLabel(List<String> failureMessages) {
+        this.failureMessages = failureMessages;
     }
 }
