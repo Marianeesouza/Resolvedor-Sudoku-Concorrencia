@@ -37,8 +37,8 @@ public class PauloResolver extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        SudokuGenerator generator = new SudokuGenerator();
-        board = generator.generateBoard(20); // Gera um novo Sudoku com 40 células vazias
+        SudokuGenerator generator = new SudokuGenerator(9);
+        board = generator.generateBoard(50); // Gera um novo Sudoku com 40 células vazias
 
         // Criar o seletor de número de threads (apenas 1, 3 ou 9)
         threadSelector = new ComboBox<>();
@@ -98,7 +98,7 @@ public class PauloResolver extends Application {
     private void reiniciarSudoku() {
         Sudoku.resetGame(); // Reseta todas as variáveis estáticas
     
-        SudokuGenerator generator = new SudokuGenerator();
+        SudokuGenerator generator = new SudokuGenerator(9);
         int[][] newBoard = generator.generateBoard(20);
     
         this.board = newBoard;

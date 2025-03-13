@@ -208,6 +208,11 @@ public class TelaSudokuController implements Initializable {
                 }
             }
         });
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @FXML
