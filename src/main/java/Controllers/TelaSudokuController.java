@@ -157,7 +157,7 @@ public class TelaSudokuController implements Initializable {
             protected void succeeded() {
                 Platform.runLater(() -> {
                     btnResolver.setDisable(false);
-                    Duration duration = Sudoku.getDuration();
+                    Duration duration = sudoku.getDuration();
                     timeLabel.setText("Tempo: " + duration.toMillis() + " ms");
 
                     // Atualiza as falhas corretamente

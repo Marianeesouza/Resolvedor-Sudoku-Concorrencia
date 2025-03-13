@@ -35,9 +35,9 @@ public class SudokuThread extends Thread {
     public void run() {
         Thread.currentThread().setName("Intervalo " + rangeStart + "-" + rangeEnd);
         boolean failure = true;
-        if (Sudoku.solutionFound.get()) return;
+        if (sudokuRef.getSolutionFound()) return;
         for (int num = rangeStart; num <= rangeEnd; num++) {
-            if (Sudoku.solutionFound.get()) break;
+            if (sudokuRef.getSolutionFound()) break;
             if (sudokuRef.isSafe(board, row, col, num)) {
                 failure = false;
                 board[row][col] = num;

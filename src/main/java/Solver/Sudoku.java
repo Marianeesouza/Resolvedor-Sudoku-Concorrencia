@@ -10,11 +10,11 @@ import java.time.Duration;
 public class Sudoku {
     private int[][] board;
     private int N;
-    public static AtomicBoolean solutionFound = new AtomicBoolean(false);
-    public static AtomicReference<int[][]> solutionBoard = new AtomicReference<>(null);
-    public static int numThreads = 3;
-    public static Instant start;
-    public static Duration duration;
+    public volatile boolean solutionFound = false;
+    public int[][] solutionBoard;
+    public int numThreads = 3;
+    public Instant start;
+    public Duration duration;
     public List<String> failureMessages = new ArrayList<>();
 
     // Variável para armazenar o callback
@@ -30,9 +30,9 @@ public class Sudoku {
         this.updateCallback = callback;
     }
 
-    public static void resetGame() {
-        solutionFound.set(false);
-        solutionBoard.set(null);
+    public void resetGame() {
+        setSolutionFound(false);
+        setSolutionBoard(null);
         start = null;
         duration = null;
     }
@@ -51,7 +51,7 @@ public class Sudoku {
     }
 
     public boolean solve(int[][] board) {
-        if (solutionFound.get()) return true;
+        if (solutionFound) return true;
 
         int row = -1, col = -1;
         boolean isEmpty = true;
@@ -69,8 +69,8 @@ public class Sudoku {
         }
 
         if (isEmpty) {
-            solutionFound.set(true);
-            solutionBoard.set(board);
+            solutionFound = true;
+            solutionBoard = board;
             Instant end = Instant.now();
             duration = Duration.between(start, end);
             System.out.println("Tempo de execução: " + duration.toSeconds() + "s");
@@ -78,7 +78,7 @@ public class Sudoku {
         }
 
         for (int num = 1; num <= N; num++) {
-            if (solutionFound.get()) return true;
+            if (solutionFound) return true;
             if (isSafe(board, row, col, num)) {
                 board[row][col] = num;
                 if (updateCallback != null) {
@@ -126,8 +126,8 @@ public class Sudoku {
         }
 
         if (firstRow == -1) {
-            solutionFound.set(true);
-            solutionBoard.set(board);
+            solutionFound = true;
+            solutionBoard = board;
             return;
         }
 
@@ -153,8 +153,8 @@ public class Sudoku {
             }
         }
 
-        if (solutionFound.get()) {
-            board = solutionBoard.get();
+        if (solutionFound) {
+            board = solutionBoard;
             print();
         }
     }
@@ -191,44 +191,44 @@ public class Sudoku {
         N = n;
     }
 
-    public static AtomicBoolean getSolutionFound() {
+    public synchronized boolean getSolutionFound() {
         return solutionFound;
     }
 
-    public static void setSolutionFound(AtomicBoolean solutionFound) {
-        Sudoku.solutionFound = solutionFound;
+    public synchronized void setSolutionFound(boolean solutionFound) {
+        this.solutionFound = solutionFound;
     }
 
-    public static AtomicReference<int[][]> getSolutionBoard() {
+    public synchronized int[][] getSolutionBoard() {
         return solutionBoard;
     }
 
-    public static void setSolutionBoard(AtomicReference<int[][]> solutionBoard) {
-        Sudoku.solutionBoard = solutionBoard;
+    public synchronized void setSolutionBoard(int[][] solutionBoard) {
+        if (!getSolutionFound()) {this.solutionBoard = solutionBoard;}
     }
 
-    public static int getNumThreads() {
+    public int getNumThreads() {
         return numThreads;
     }
 
-    public static void setNumThreads(int numThreads) {
-        Sudoku.numThreads = numThreads;
+    public void setNumThreads(int numThreads) {
+        this.numThreads = numThreads;
     }
 
-    public static Instant getStart() {
+    public Instant getStart() {
         return start;
     }
 
-    public static void setStart(Instant start) {
-        Sudoku.start = start;
+    public void setStart(Instant start) {
+        this.start = start;
     }
 
-    public static Duration getDuration() {
+    public Duration getDuration() {
         return duration;
     }
 
-    public static void setDuration(Duration duration) {
-        Sudoku.duration = duration;
+    public void setDuration(Duration duration) {
+        this.duration = duration;
     }
 
     public List<String> getFailureLabel() {

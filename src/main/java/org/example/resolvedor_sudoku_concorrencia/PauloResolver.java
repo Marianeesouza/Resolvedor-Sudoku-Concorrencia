@@ -81,7 +81,7 @@ public class PauloResolver extends Application {
 
             // Atualiza o tempo de execução na UI
             Platform.runLater(() -> {
-                Duration duration = Sudoku.getDuration(); // Pegando o tempo de execução
+                Duration duration = sudoku.getDuration(); // Pegando o tempo de execução
                 timeLabel.setText("Tempo: " + duration.toMillis() + " ms");
                 List<String> failureMessages = sudoku.getFailureLabel();
                 for (String failureMsg : failureMessages) {
@@ -96,7 +96,7 @@ public class PauloResolver extends Application {
     }
 
     private void reiniciarSudoku() {
-        Sudoku.resetGame(); // Reseta todas as variáveis estáticas
+        sudoku.resetGame(); // Reseta todas as variáveis estáticas
     
         SudokuGenerator generator = new SudokuGenerator(9);
         int[][] newBoard = generator.generateBoard(20);
