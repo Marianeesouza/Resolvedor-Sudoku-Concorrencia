@@ -106,7 +106,6 @@ public class PauloResolver extends Application {
         Stage stage = (Stage) startButton.getScene().getWindow();
         stage.close();
     
-        Platform.runLater(() -> new HelloApplication().start(new Stage()));
     }
     
     

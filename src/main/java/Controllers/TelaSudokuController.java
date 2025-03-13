@@ -1,18 +1,21 @@
 package Controllers;
 
 import Solver.Sudoku;
-import Utils.TamanhoMatriz;
+import Solver.SudokuGenerator;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 
 import java.net.URL;
-import java.util.ResourceBundle;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import javafx.concurrent.Task;
 
 public class TelaSudokuController implements Initializable {
 
@@ -22,98 +25,187 @@ public class TelaSudokuController implements Initializable {
     @FXML
     private Button btnResolver;
 
-    private int tamanhoMatriz;
-    private TextField[][] campos;
-    private int[][] board;
+    private final int SIZE = 9;
+    private Label[][] mainBoard = new Label[SIZE][SIZE];
+    private int[][] board = new int[SIZE][SIZE];
+
+    private final Map<Thread, Label[][]> threadBoards = new HashMap<>();
+    private Sudoku sudoku;
+
+    private GridPane mainGrid;
+    private HBox root;
+    private HBox threadBoardsContainer;
+    private ComboBox<Integer> threadSelector;
+    private Label timeLabel;
+    private static final Label failureLabel = new Label("Falhas: ");
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(3);
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        tamanhoMatriz = Integer.parseInt(TamanhoMatriz.tamanhoMatriz.split("x")[0]);
-        board = new int[tamanhoMatriz][tamanhoMatriz];
+        SudokuGenerator generator = new SudokuGenerator();
+        board = generator.generateBoard(20);
 
-        criarGridSudoku();
-        carregarBoardFixo();
-        atualizarInterface();
+        threadSelector = new ComboBox<>();
+        threadSelector.getItems().addAll(1, 3, 9);
+        threadSelector.setValue(3);
+        threadSelector.setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
+
+        btnResolver.setText("Resolver Sudoku");
+        btnResolver.setStyle("-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color: #4CAF50; -fx-text-fill: white; -fx-border-radius: 5px;");
+
+        timeLabel = new Label("Tempo: --");
+        timeLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+
+        failureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red;");
+
+        mainGrid = createGrid(mainBoard, 40);
+        mainGrid.setStyle("-fx-padding: 10px; -fx-border-color: black; -fx-border-width: 3px; -fx-background-color: #f0f0f0;");
+        updateMainGrid();
+
+        HBox controls = new HBox(15, new Label("Número de Threads:"), threadSelector, btnResolver);
+        controls.setAlignment(Pos.CENTER);
+        controls.setStyle("-fx-padding: 10px;");
+
+        VBox infoPanel = new VBox(5, timeLabel, failureLabel);
+        infoPanel.setAlignment(Pos.CENTER);
+
+        threadBoardsContainer = new HBox(10);
+        threadBoardsContainer.setAlignment(Pos.CENTER);
+        threadBoardsContainer.setStyle("-fx-padding: 10px; -fx-border-color: black; -fx-border-width: 1px;");
+
+        root = new HBox(20, mainGrid, threadBoardsContainer);
+        root.setAlignment(Pos.CENTER);
+        root.setStyle("-fx-padding: 10px;");
+
+        VBox layout = new VBox(10, controls, root, infoPanel);
+        layout.setAlignment(Pos.CENTER);
+        layout.setStyle("-fx-padding: 15px;");
+
+        panePrincipal.getChildren().add(layout);
+
+        btnResolver.setOnAction(this::resolverSudoku);
     }
-
-    private void criarGridSudoku() {
-        GridPane grid = new GridPane();
-        campos = new TextField[tamanhoMatriz][tamanhoMatriz];
-
-        for (int i = 0; i < tamanhoMatriz; i++) {
-            for (int j = 0; j < tamanhoMatriz; j++) {
-                TextField campo = new TextField();
-                campo.setPrefSize(40, 40);
-                campo.setStyle("-fx-font-size: 14px; -fx-alignment: center; -fx-border-color: black; -fx-border-width: 1;");
-                campo.setEditable(false);
-
-                campos[i][j] = campo;
-                grid.add(campo, j, i);
+    private void updateMainGrid() {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                int value = board[i][j];
+                mainBoard[i][j].setText(value == 0 ? "" : String.valueOf(value));
+                mainBoard[i][j].setStyle(value == 0
+                        ? "-fx-border-color: black; -fx-font-size: 16px; -fx-alignment: center; -fx-background-color: white; -fx-border-radius: 5px;"
+                        : "-fx-border-color: black; -fx-font-size: 16px; -fx-alignment: center; -fx-background-color: lightgray; -fx-border-radius: 5px;");
             }
         }
-
-        grid.setStyle("-fx-background-color: white; -fx-border-color: black; -fx-border-width: 2;");
-        grid.setLayoutX(200);
-        grid.setLayoutY(100);
-        panePrincipal.getChildren().add(grid);
     }
 
-    private void carregarBoardFixo() {
-        if (this.tamanhoMatriz == 16) {
-            this.board = new int[][]{
-                    {1, 0, 0, 4, 0, 6, 7, 0, 9, 0, 11, 0, 13, 14, 0, 16},
-                    {5, 0, 0, 0, 9, 0, 11, 12, 0, 14, 15, 0, 1, 0, 3, 0},
-                    {0, 10, 11, 0, 13, 0, 0, 16, 1, 0, 3, 4, 5, 0, 7, 8},
-                    {13, 14, 0, 0, 1, 0, 3, 4, 5, 0, 7, 0, 9, 0, 11, 0},
+    private GridPane createGrid(Label[][] labels, double cellSize) {
+        GridPane grid = new GridPane();
+        grid.setHgap(3);
+        grid.setVgap(3);
+        grid.setAlignment(Pos.CENTER);
+        grid.setStyle("-fx-padding: 5px;");
 
-                    {2, 1, 0, 0, 6, 5, 0, 0, 10, 9, 0, 11, 14, 0, 0, 15},
-                    {0, 5, 0, 7, 10, 0, 12, 0, 14, 0, 0, 15, 2, 0, 4, 3},
-                    {10, 0, 12, 11, 14, 13, 0, 0, 2, 1, 4, 0, 0, 5, 8, 0},
-                    {14, 0, 16, 0, 0, 1, 4, 3, 0, 5, 0, 7, 10, 9, 0, 11},
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                Label cell = new Label("");
+                cell.setMinSize(cellSize, cellSize);
+                cell.setStyle("-fx-border-color: black; -fx-font-size: 16px; -fx-alignment: center; -fx-background-color: white; -fx-border-radius: 5px;");
 
-                    {0, 4, 1, 2, 7, 8, 0, 6, 0, 0, 9, 10, 0, 16, 0, 14},
-                    {7, 0, 5, 6, 11, 0, 9, 10, 15, 0, 0, 14, 3, 0, 1, 0},
-                    {11, 12, 9, 0, 15, 0, 0, 14, 3, 4, 1, 0, 7, 0, 0, 6},
-                    {15, 0, 0, 14, 3, 4, 1, 0, 7, 8, 0, 6, 11, 12, 9, 0},
+                labels[i][j] = cell;
+                grid.add(cell, j, i);
+            }
+        }
+        return grid;
+    }
 
-                    {4, 0, 0, 1, 8, 0, 6, 5, 12, 0, 10, 0, 16, 0, 14, 0},
-                    {0, 7, 0, 5, 12, 0, 0, 9, 0, 15, 0, 13, 4, 3, 0, 1},
-                    {12, 0, 10, 0, 16, 15, 14, 0, 0, 3, 2, 1, 8, 7, 0, 5},
-                    {16, 0, 0, 13, 4, 3, 0, 1, 8, 7, 6, 0, 12, 11, 0, 0}
-            };
-        } else if (this.tamanhoMatriz == 9) {
-            this.board = new int[][]{
-                    {5, 3, 0, 0, 7, 0, 0, 0, 0},
-                    {6, 0, 0, 1, 9, 5, 0, 0, 0},
-                    {0, 9, 8, 0, 0, 0, 0, 6, 0},
-                    {8, 0, 0, 0, 6, 0, 0, 0, 3},
-                    {4, 0, 0, 8, 0, 3, 0, 0, 1},
-                    {7, 0, 0, 0, 2, 0, 0, 0, 6},
-                    {0, 6, 0, 0, 0, 0, 2, 8, 0},
-                    {0, 0, 0, 4, 1, 9, 0, 0, 5},
-                    {0, 0, 0, 0, 8, 0, 0, 7, 9}
-            };
+    public void updateBoard(int[][] board, Thread thread) {
+        Platform.runLater(() -> {
+            if (!threadBoards.containsKey(thread)) {
+                Label[][] threadBoard = new Label[SIZE][SIZE];
+                GridPane threadGrid = createGrid(threadBoard, 35);
+                threadBoards.put(thread, threadBoard);
+
+                Label threadLabel = new Label("Thread " + thread.getName());
+                threadLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: blue;");
+
+                VBox threadBox = new VBox(5, threadLabel, threadGrid);
+                threadBox.setAlignment(Pos.CENTER);
+                threadBox.setStyle("-fx-border-color: black; -fx-border-width: 2px; -fx-padding: 5px; -fx-background-color: #e3f2fd;");
+
+                threadBoardsContainer.getChildren().add(threadBox);
+            }
+
+            Label[][] threadBoard = threadBoards.get(thread);
+            for (int i = 0; i < SIZE; i++) {
+                for (int j = 0; j < SIZE; j++) {
+                    int value = board[i][j];
+                    threadBoard[i][j].setText(value == 0 ? "" : String.valueOf(value));
+                    threadBoard[i][j].setStyle(value == 0
+                            ? "-fx-border-color: black; -fx-font-size: 14px; -fx-alignment: center; -fx-background-color: white; -fx-border-radius: 5px;"
+                            : "-fx-border-color: black; -fx-font-size: 14px; -fx-alignment: center; -fx-background-color: lightblue; -fx-border-radius: 5px;");
+                }
+            }
+        });
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
+    private void iniciarSudoku() {
+        btnResolver.setDisable(true);
+        threadBoardsContainer.getChildren().clear();
+        threadBoards.clear();
+
+        int numThreads = threadSelector.getValue();
+        sudoku = new Sudoku(board, numThreads);
+
+        sudoku.setUpdateCallback((board, thread) -> updateBoard(board, thread));
+
+        Task<Void> sudokuTask = new Task<>() {
+            @Override
+            protected Void call() {
+                sudoku.solveConcurrently();
+                return null;
+            }
+
+            @Override
+            protected void succeeded() {
+                Platform.runLater(() -> {
+                    Duration duration = Sudoku.getDuration();
+                    timeLabel.setText("Tempo: " + duration.toMillis() + " ms");
+
+                    List<String> failureMessages = sudoku.getFailureLabel();
+                    failureMessages.forEach(msg -> failureLabel.setText(failureLabel.getText() + "\n" + msg));
+
+                    btnResolver.setDisable(false);
+                    btnResolver.setText("Reiniciar Sudoku");
+                    btnResolver.setStyle("-fx-background-color: #f57c00;");
+                    btnResolver.setOnAction(e -> reiniciarSudoku());
+                });
+            }
+
+            @Override
+            protected void failed() {
+                Platform.runLater(() -> failureLabel.setText("Erro ao resolver Sudoku!"));
+            }
+        };
+
+        executorService.submit(sudokuTask);
+    }
+
+    private void reiniciarSudoku() {
+        Sudoku.resetGame();
+        SudokuGenerator generator = new SudokuGenerator();
+        board = generator.generateBoard(20);
+        updateBoard(board, null);
+        btnResolver.setText("Resolver Sudoku");
+        btnResolver.setStyle("-fx-background-color: #4CAF50;");
+    }
 
     @FXML
     private void resolverSudoku(ActionEvent event) {
-        new Thread(() -> {
-            Sudoku sudoku = new Sudoku(board);
-            if (sudoku.solve()) {
-                Platform.runLater(this::atualizarInterface);
-            } else {
-                System.out.println("Nenhuma solução encontrada!");
-            }
-        }).start();
-    }
-
-    private void atualizarInterface() {
-        for (int i = 0; i < tamanhoMatriz; i++) {
-            for (int j = 0; j < tamanhoMatriz; j++) {
-                campos[i][j].setText(board[i][j] == 0 ? "" : String.valueOf(board[i][j]));
-            }
-        }
+        iniciarSudoku();
     }
 }

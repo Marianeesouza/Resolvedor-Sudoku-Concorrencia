@@ -23,10 +23,10 @@ public class Main extends Application {
         stage.setMinHeight(768);
         stage.setMinWidth(1024);
         TelaAtual = stage;
-        stage.setResizable(false);
         FXMLLoader root = new FXMLLoader(Main.class.getResource("telaInicial.fxml"));
         Scene scene = new Scene(root.load());
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.setTitle("Sudoku Concorrência");
         stage.show();
     }
