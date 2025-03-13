@@ -20,13 +20,10 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        stage.setMinHeight(768);
-        stage.setMinWidth(1024);
         TelaAtual = stage;
         FXMLLoader root = new FXMLLoader(Main.class.getResource("telaInicial.fxml"));
         Scene scene = new Scene(root.load());
         stage.setScene(scene);
-        stage.setResizable(false);
         stage.setTitle("Sudoku Concorrência");
         stage.show();
     }

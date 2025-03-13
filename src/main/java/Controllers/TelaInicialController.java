@@ -36,14 +36,17 @@ public class TelaInicialController implements Initializable {
 
     @FXML
     void iniciarJogo(ActionEvent event) throws IOException {
-        if (this.comboMatriz.getSelectionModel().getSelectedItem() == null) {
+        String selectedItem = this.comboMatriz.getSelectionModel().getSelectedItem();
+
+        if (selectedItem == null) {
             this.MensagemErro.setText("Selecione uma opção");
             return;
         }
 
-        TamanhoMatriz.tamanhoMatriz = this.comboMatriz.getSelectionModel().getSelectedItem();
+        TamanhoMatriz.tamanhoMatriz = Integer.parseInt(selectedItem.split("x")[0]);
         Main.TrocarTela(new FXMLLoader(Main.class.getResource("telaResolvedorSudoku.fxml")).load());
     }
+
 
 
 
