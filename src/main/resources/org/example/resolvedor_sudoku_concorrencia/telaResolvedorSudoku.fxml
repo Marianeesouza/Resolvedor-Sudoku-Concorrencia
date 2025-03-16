@@ -4,5 +4,15 @@
 <?import javafx.scene.layout.AnchorPane?>
 
 <AnchorPane fx:id="panePrincipal" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1024.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.TelaSudokuController">
-<Button fx:id="btnResolver" layoutX="422.0" layoutY="35.0" onAction="#resolverSudoku" prefHeight="50.0" prefWidth="200.0" style="-fx-font-size: 18px; -fx-background-color: #2196F3; -fx-text-fill: white; -fx-background-radius: 10;" text="Resolver Sudoku" />
-        </AnchorPane>
+
+    <!-- Botão Resolver Sudoku -->
+    <Button fx:id="btnResolver" layoutX="322.0" layoutY="35.0" onAction="#resolverSudoku" prefHeight="50.0" prefWidth="200.0"
+            style="-fx-font-size: 18px; -fx-background-color: #2196F3; -fx-text-fill: white; -fx-background-radius: 10;"
+            text="Resolver Sudoku" />
+
+    <!-- Botão Mudar Tabuleiro -->
+    <Button fx:id="btnMudarTabuleiro" layoutX="532.0" layoutY="35.0" onAction="#mudarTabuleiro" prefHeight="50.0" prefWidth="200.0"
+            style="-fx-font-size: 18px; -fx-background-color: #FF9800; -fx-text-fill: white; -fx-background-radius: 10;"
+            text="Mudar Tabuleiro" />
+
+</AnchorPane>

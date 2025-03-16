@@ -11,6 +11,11 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.*;
@@ -25,6 +30,10 @@ public class TelaSudokuController implements Initializable {
 
     @FXML
     private Button btnResolver;
+
+
+    @FXML
+    private Button btnMudarTabuleiro;
 
     private final int SIZE = TamanhoMatriz.tamanhoMatriz;
     private Label[][] mainBoard = new Label[SIZE][SIZE];
@@ -41,6 +50,7 @@ public class TelaSudokuController implements Initializable {
     private static final Label failureLabel = new Label("Falhas: ");
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
     private int threadGridCounter = 0;
+    public boolean jaFoiCriado = false;
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -61,6 +71,10 @@ public class TelaSudokuController implements Initializable {
         btnResolver.setStyle("-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color: #4CAF50; -fx-text-fill: white; -fx-border-radius: 5px;");
         btnResolver.setDisable(true);
 
+        btnMudarTabuleiro.setText("Mudar tabuleiro");
+        btnMudarTabuleiro.setStyle("-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color:  #FF9800; -fx-text-fill: white; -fx-border-radius: 5px;");
+        btnMudarTabuleiro.setDisable(true);
+
         timeLabel = new Label("Tempo: --");
         timeLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
         failureLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red;");
@@ -69,7 +83,11 @@ public class TelaSudokuController implements Initializable {
         mainGrid = createGrid(mainBoard, cellSize);
         mainGrid.setStyle("-fx-padding: 10px; -fx-border-color: black; -fx-border-width: 3px; -fx-background-color: #f0f0f0;");
 
-        HBox controls = new HBox(15, new Label("Células Vazias:"), emptyCellsSelector, new Label("Número de Threads:"), threadSelector, btnResolver);
+        HBox controls = new HBox(15,
+                new Label("Células Vazias:"), emptyCellsSelector,
+                new Label("Número de Threads:"), threadSelector,
+                btnResolver, btnMudarTabuleiro
+        );
         controls.setAlignment(Pos.CENTER);
         controls.setStyle("-fx-padding: 10px;");
 
@@ -131,20 +149,7 @@ public class TelaSudokuController implements Initializable {
 
     private void iniciarSudoku() {
         btnResolver.setDisable(true);
-        threadBoardsContainer.getChildren().clear();
-        threadBoards.clear();
-        threadGrids.clear();
-        threadGridCounter = 0;
-        failureLabel.setText("Falhas: ");
-
-        int numThreads = threadSelector.getValue();
         int emptyCells = emptyCellsSelector.getValue();
-        SudokuGenerator generator = new SudokuGenerator(SIZE);
-        board = generator.generateBoard(emptyCells);
-        updateMainGrid();
-
-        sudoku = new Sudoku(board, numThreads);
-        sudoku.setUpdateCallback(this::updateBoard);
 
         Task<Void> sudokuTask = new Task<>() {
             @Override
@@ -161,6 +166,7 @@ public class TelaSudokuController implements Initializable {
                     timeLabel.setText("Tempo: " + duration.toMillis() + " ms");
 
                     // Atualiza as falhas corretamente
+                    salvarResultadosSudoku(threadSelector.getValue(), duration, emptyCells, SIZE);
                     List<String> failureMessages = sudoku.getFailureLabel();
                     if (!failureMessages.isEmpty()) {
                         StringBuilder sb = new StringBuilder("Falhas:");
@@ -208,15 +214,75 @@ public class TelaSudokuController implements Initializable {
                 }
             }
         });
-        try {
-            Thread.sleep(5);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+
     }
 
     @FXML
     private void resolverSudoku(ActionEvent event) {
-        iniciarSudoku();
+        int numThreads = threadSelector.getValue();
+        threadBoardsContainer.getChildren().clear();
+        threadBoards.clear();
+        if (!jaFoiCriado){
+            btnResolver.setDisable(true);
+
+            threadGrids.clear();
+            threadGridCounter = 0;
+            failureLabel.setText("Falhas: ");
+
+            int emptyCells = emptyCellsSelector.getValue();
+            SudokuGenerator generator = new SudokuGenerator(SIZE);
+            board = generator.generateBoard(emptyCells);
+            updateMainGrid();
+
+            sudoku = new Sudoku(board, numThreads);
+            sudoku.setUpdateCallback(this::updateBoard);
+            jaFoiCriado = true;
+            iniciarSudoku();
+
+        }else{
+            sudoku = new Sudoku(board, numThreads);
+            sudoku.setUpdateCallback(this::updateBoard);
+            iniciarSudoku();
+        }
+        btnMudarTabuleiro.setDisable(false);
     }
+
+    @FXML
+    private void mudarTabuleiro(ActionEvent event) {
+        btnResolver.setDisable(false);
+        threadBoardsContainer.getChildren().clear();
+        threadBoards.clear();
+        threadGrids.clear();
+        threadGridCounter = 0;
+        failureLabel.setText("Falhas: ");
+
+        int emptyCells = emptyCellsSelector.getValue();
+        SudokuGenerator generator = new SudokuGenerator(SIZE);
+        board = generator.generateBoard(emptyCells);
+        updateMainGrid();
+        int numThreads = threadSelector.getValue();
+        sudoku = new Sudoku(board, numThreads);
+        sudoku.setUpdateCallback(this::updateBoard);
+
+        jaFoiCriado = true;
+    }
+
+
+    private void salvarResultadosSudoku(int numThreads, Duration tempoExecucao, int espacos, int size) {
+        String nomeArquivo = "sudoku_resultados.csv";
+        boolean arquivoExiste = new File(nomeArquivo).exists();
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(nomeArquivo, true))) {
+            if (!arquivoExiste) {
+                writer.write("Threads,Tempo (ms),Espaços,Tamanho\n");
+            }
+            writer.write(numThreads + "," + tempoExecucao.toMillis() + "," + espacos + "," + size);
+            writer.newLine();
+            writer.flush();
+        } catch (IOException e) {
+            System.err.println("Erro ao salvar os resultados do Sudoku: " + e.getMessage());
+        }
+    }
+
+
 }

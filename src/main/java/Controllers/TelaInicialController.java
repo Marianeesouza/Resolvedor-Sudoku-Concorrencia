@@ -47,7 +47,11 @@ public class TelaInicialController implements Initializable {
         Main.TrocarTela(new FXMLLoader(Main.class.getResource("telaResolvedorSudoku.fxml")).load());
     }
 
+    @FXML
+    void verRelatorios(ActionEvent event) throws IOException {
+        Main.TrocarTela(new FXMLLoader(Main.class.getResource("relatorios.fxml")).load());
 
+    }
 
 
 }
