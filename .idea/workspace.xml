@@ -5,13 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e635e1c5-2b2c-4522-9e6e-ee9920870f63" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/Controllers/RelatorioController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/Controllers/TelaInicialController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controllers/TelaInicialController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/Controllers/RelatorioController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controllers/RelatorioController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/Controllers/TelaSudokuController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/Controllers/TelaSudokuController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/resolvedor_sudoku_concorrencia/telaInicial.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/resolvedor_sudoku_concorrencia/telaInicial.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/resolvedor_sudoku_concorrencia/telaResolvedorSudoku.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/resolvedor_sudoku_concorrencia/telaResolvedorSudoku.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/org/example/resolvedor_sudoku_concorrencia/relatorios.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/org/example/resolvedor_sudoku_concorrencia/relatorios.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sudoku_resultados.csv" beforeDir="false" afterPath="$PROJECT_DIR$/sudoku_resultados.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,13 +47,14 @@
     "Application.Main.executor": "Run",
     "Application.PauloResolver.executor": "Run",
     "Application.Sudoku.executor": "Run",
+    "Application.Testes.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/paulo/OneDrive/Documentos/GitHub/Resolvedor-Sudoku-Concorrencia",
+    "last_opened_file_path": "C:/Users/mari8/OneDrive/Área de Trabalho/Faculdade/Paradigmas/projeto-da-2a-va-resolvedor-de-sudoku/src/main/java/org/example/resolvedor_sudoku_concorrencia",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -63,13 +64,37 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="SharedIndexes">
-    <attachedChunks>
-      <set>
-        <option value="bundled-jdk-9823dce3aa75-fdfe4dae3a2d-intellij.indexing.shared.core-IU-243.21565.193" />
-        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-IU-243.21565.193" />
-      </set>
-    </attachedChunks>
+  <component name="RunManager">
+    <configuration name="Main" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="org.example.resolvedor_sudoku_concorrencia.Main" />
+      <module name="Resolvedor_Sudoku_Concorrencia" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/main/java/org/example/resolvedor_sudoku_concorrencia" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Testes" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Utils.Testes" />
+      <module name="Resolvedor_Sudoku_Concorrencia" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="Utils.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.Main" />
+      <item itemvalue="Application.Testes" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.Testes" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -85,6 +110,7 @@
       <workItem from="1740487413115" duration="5593000" />
       <workItem from="1741867847719" duration="2704000" />
       <workItem from="1742129434899" duration="7317000" />
+      <workItem from="1742171246860" duration="17293000" />
     </task>
     <servers />
   </component>

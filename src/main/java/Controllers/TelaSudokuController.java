@@ -6,9 +6,12 @@ import Utils.TamanhoMatriz;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -22,18 +25,19 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javafx.concurrent.Task;
+import javafx.stage.Stage;
+import org.example.resolvedor_sudoku_concorrencia.Main;
 
 public class TelaSudokuController implements Initializable {
 
     @FXML
     private AnchorPane panePrincipal;
-
     @FXML
     private Button btnResolver;
-
-
     @FXML
     private Button btnMudarTabuleiro;
+    @FXML
+    private Button btnVoltar;
 
     private final int SIZE = TamanhoMatriz.tamanhoMatriz;
     private Label[][] mainBoard = new Label[SIZE][SIZE];
@@ -54,6 +58,7 @@ public class TelaSudokuController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
+        // Maximiza a janela após a cena ser carregada
         emptyCellsSelector = new ComboBox<>();
         if (SIZE == 9) {
             emptyCellsSelector.getItems().addAll(10, 20, 30, 40, 50, 60);
@@ -63,7 +68,11 @@ public class TelaSudokuController implements Initializable {
         emptyCellsSelector.setPromptText("Escolha células vazias");
 
         threadSelector = new ComboBox<>();
-        threadSelector.getItems().addAll(1, 3, 9);
+        if (SIZE == 9) {
+            threadSelector.getItems().addAll(1, 3, 9);
+        } else if (SIZE == 16) {
+            threadSelector.getItems().addAll(1, 2, 3, 4, 8, 16);
+        }
         threadSelector.setValue(3);
         threadSelector.setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
 
@@ -74,6 +83,16 @@ public class TelaSudokuController implements Initializable {
         btnMudarTabuleiro.setText("Mudar tabuleiro");
         btnMudarTabuleiro.setStyle("-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color:  #FF9800; -fx-text-fill: white; -fx-border-radius: 5px;");
         btnMudarTabuleiro.setDisable(true);
+
+        btnVoltar = new Button("Voltar");
+        btnVoltar.setStyle("-fx-font-size: 16px; -fx-padding: 10px; -fx-background-color: #F44336; -fx-text-fill: white; -fx-border-radius: 5px;");
+        btnVoltar.setOnAction(event -> {
+            try {
+                voltarParaTelaInicial();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         timeLabel = new Label("Tempo: --");
         timeLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
@@ -86,7 +105,7 @@ public class TelaSudokuController implements Initializable {
         HBox controls = new HBox(15,
                 new Label("Células Vazias:"), emptyCellsSelector,
                 new Label("Número de Threads:"), threadSelector,
-                btnResolver, btnMudarTabuleiro
+                btnResolver, btnMudarTabuleiro, btnVoltar
         );
         controls.setAlignment(Pos.CENTER);
         controls.setStyle("-fx-padding: 10px;");
@@ -115,9 +134,16 @@ public class TelaSudokuController implements Initializable {
 
         panePrincipal.getChildren().add(layout);
 
+
         emptyCellsSelector.setOnAction(event -> btnResolver.setDisable(false));
         btnResolver.setOnAction(this::resolverSudoku);
     }
+
+    @FXML
+    private void voltarParaTelaInicial() throws IOException {
+        Main.TrocarTela(new FXMLLoader(Main.class.getResource("telaInicial.fxml")).load());
+    }
+
 
     private void updateMainGrid() {
         for (int i = 0; i < SIZE; i++) {
